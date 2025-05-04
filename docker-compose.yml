@@ -1,7 +1,11 @@
 services:
   # listmonk app
   listmonk:
-    image: ghcr.io/mredig/listmonk:v0.0.0001-test
+    image: ghcr.io/mredig/listmonk:fork-test
+    build:
+      context: ./listmonk-docker-edit/
+      args:
+        CONFIG: ${CONFIG:-debug}
     restart: unless-stopped
     networks:
       - caddy_proxy
