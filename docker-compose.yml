@@ -1,0 +1,74 @@
+services:
+  # listmonk app
+  listmonk:
+    image: listmonk/listmonk:latest
+    restart: unless-stopped
+    networks:
+      - caddy_proxy
+    hostname: listmonk.redig.me
+    depends_on:
+      - db
+    command: [sh, -c, "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''"]
+                                                              # --config (file) param is set to empty so that listmonk only uses the env vars (below) for config.
+                                                              # --install --idempotent ensures that DB installation happens only once on an empty DB, on the first ever start.
+                                                              # --upgrade automatically runs any DB migrations when a new image is pulled.
+
+    environment:                                              # The same params as in config.toml are passed as env vars here.
+      LISTMONK_app__address: 0.0.0.0:9000
+      LISTMONK_db__user_FILE: /run/secrets/listmonk_db_user
+      LISTMONK_db__password_FILE: /run/secrets/listmonk_db_pw
+      LISTMONK_db__database_FILE: /run/secrets/listmonk_db
+      LISTMONK_db__host: listmonk-db
+      LISTMONK_db__port: 5432
+      LISTMONK_db__ssl_mode: disable
+      LISTMONK_db__max_open: 25
+      LISTMONK_db__max_idle: 25
+      LISTMONK_db__max_lifetime: 300s
+      TZ: America/Chicago
+      LISTMONK_ADMIN_USER_FILE: /run/secrets/listmonk_admin_user           # If these (optional) are set during the first `docker compose up`, then the Super Admin user is automatically created.
+      LISTMONK_ADMIN_PASSWORD_FILE: /run/secrets/listmonk_admin_password   # Otherwise, the user can be setup on the web app after the first visit to http://localhost:9000
+    volumes:
+      - ./uploads:/listmonk/uploads:rw                        # Mount an uploads directory on the host to /listmonk/uploads inside the container.
+                                                              # To use this, change directory path in Admin -> Settings -> Media to /listmonk/uploads
+    secrets:
+      - listmonk_db_pw
+      - listmonk_db_user
+      - listmonk_db
+
+  # Postgres database
+  listmonk-db:
+    image: postgres:alpine
+    container_name: listmonk_db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U listmonk"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    shm_size: 128mb
+    volumes:
+      - ./pg_store:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/listmonk_db_pw
+      POSTGRES_USER_FILE: /run/secrets/listmonk_db_user
+      POSTGRES_DB_FILE: /run/secrets/listmonk_db
+    secrets:
+      - listmonk_db_pw
+      - listmonk_db_user
+      - listmonk_db
+
+networks:
+  caddy_proxy:
+    external: true
+
+secrets:
+  listmonk_db_pw:
+    external: true
+  listmonk_db_user:
+    external: true
+  listmonk_db:
+    external: true
+  listmonk_admin_user:
+    external: true
+  listmonk_admin_password:
+    external: true
