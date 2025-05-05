@@ -63,6 +63,16 @@ services:
       - listmonk_db_user
       - listmonk_db
 
+  listmonk-db-admin:
+    image: adminer
+    restart: unless-stopped
+    # ports:
+    #   - 8081:8080
+    networks:
+      - caddy_proxy
+    depends_on:
+      - listmonk-db
+
 networks:
   caddy_proxy:
     external: true
