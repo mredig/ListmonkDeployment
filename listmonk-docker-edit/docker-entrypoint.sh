@@ -64,6 +64,7 @@ load_secret_files() {
       # Eg: LISTMONK_DB_USER_FILE=/run/secrets/user -> LISTMONK_DB_USER=$(contents of /run/secrets/user)
       export "${var%_FILE}"="$(cat "$fpath")"
       echo "Loading $var (from file)"
+      echo "Loading ${var%_FILE} (from file)"
     fi
   done
 }
