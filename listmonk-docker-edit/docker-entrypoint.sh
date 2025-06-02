@@ -34,25 +34,6 @@ create_user() {
 create_group
 create_user
 
-# load_env_from_file() {
-#   VAR_NAME=$1
-#   eval "value=\${$VAR_NAME:-}"
-#   if [ -z "$value" ]; then
-#     eval "value_FILE=\${${VAR_NAME}_FILE:-}"
-#     if [ -n "$value_FILE" ]; then
-#       TEMP=$(cat "$value_FILE")
-#       eval "export $VAR_NAME=\"$TEMP\""
-#       echo "Loaded $VAR_NAME"
-#     fi
-#   fi
-# }
-
-# load_env_from_file LISTMONK_db__user
-# load_env_from_file LISTMONK_db__password
-# load_env_from_file LISTMONK_db__database
-# load_env_from_file LISTMONK_ADMIN_USER
-# load_env_from_file LISTMONK_ADMIN_PASSWORD
-
 load_secret_files() {
   # Capture all env variables starting with LISTMONK_ and ending with _FILE.
   for var in $(compgen -v "LISTMONK_" | grep "_FILE$"); do
